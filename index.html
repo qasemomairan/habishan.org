@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>الراقي للحجز | طيران وباصات - نظام متكامل مع Firebase</title>
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase SDK v9 (modular) -->
+    <script type="module">
+        // استيراد Firebase من CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // إعدادات Firebase (من المستخدم)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJVxsARueQKDK6ETJonkV-ov8jRRLreXg",
+            authDomain: "office-alhami.firebaseapp.com",
+            databaseURL: "https://office-alhami-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "office-alhami",
+            storageBucket: "office-alhami.firebasestorage.app",
+            messagingSenderId: "77683467575",
+            appId: "1:77683467575:web:05c492a00676334528a6b2",
+            measurementId: "G-6FHJPM2RHL"
+        };
+
+        // تهيئة Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const storage = getStorage(app);
+        const auth = getAuth(app);
+
+        // جعل الكائنات عامة للاستخدام في دوال HTML (غير module)
+        window.db = db;
+        window.storage = storage;
+        window.auth = auth;
+        window.ref = ref;
+        window.push = push;
+        window.set = set;
+        window.onValue = onValue;
+        window.update = update;
+        window.remove = remove;
+        window.storageRef = storageRef;
+        window.uploadBytes = uploadBytes;
+        window.getDownloadURL = getDownloadURL;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.signOut = signOut;
+        window.onAuthStateChanged = onAuthStateChanged;
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(145deg, #f5f7fc 0%, #eef2f5 100%);
+            color: #1e2a3e;
+            padding: 30px 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .logo {
+            background: linear-gradient(135deg, #0b2b40, #1b4f6e);
+            display: inline-block;
+            padding: 18px 40px;
+            border-radius: 100px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        .logo h1 { font-size: 2.2rem; font-weight: 800; color: #f9c74f; }
+        .logo span { font-size: 1rem; color: #f0f3f5; }
+        .card {
+            background: #ffffff;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
+            padding: 30px 28px;
+            margin-bottom: 45px;
+            transition: transform 0.2s;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #134b66;
+            border-right: 6px solid #f9c74f;
+            padding-right: 18px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 22px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .input-group label { font-weight: 600; color: #1f506b; }
+        input, select, .file-label {
+            padding: 14px 16px;
+            border-radius: 24px;
+            border: 1.5px solid #dce4ec;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+        input:focus, select:focus { border-color: #f9c74f; box-shadow: 0 0 0 3px rgba(249,199,79,0.2); }
+        .file-label {
+            background: #f8fafd;
+            text-align: center;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border-style: dashed;
+        }
+        .btn-submit, .btn-login {
+            background: linear-gradient(95deg, #134b66, #1b6b8f);
+            border: none;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            padding: 14px 25px;
+            border-radius: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .btn-logout { background: #9e2a2a; margin-top: 0; width: auto; padding: 8px 20px; }
+        .table-wrapper { overflow-x: auto; border-radius: 28px; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #eef2f8; padding: 16px 12px; color: #134b66; }
+        td { padding: 14px 10px; border-bottom: 1px solid #e4e9f0; vertical-align: middle; }
+        .status-badge { display: inline-block; padding: 6px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; }
+        .status-pending { background: #fff3df; color: #c47a00; }
+        .status-approved { background: #e0f7ea; color: #1e7b48; }
+        .action-btn { background: none; border: none; font-size: 1.2rem; margin: 0 4px; cursor: pointer; padding: 6px; border-radius: 30px; width: 34px; }
+        .approve-btn { color: #2a9d8f; background: #eafaf7; }
+        .delete-btn { color: #e76f51; background: #feece7; }
+        .thumbnail-img { width: 48px; height: 48px; object-fit: cover; border-radius: 12px; cursor: pointer; border: 1px solid #cddfe7; }
+        .login-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 2000;
+        }
+        .login-card {
+            background: white; border-radius: 48px; padding: 40px; width: 90%; max-width: 450px;
+            text-align: center; box-shadow: 0 30px 40px rgba(0,0,0,0.3);
+        }
+        .admin-badge { background: #f9c74f; padding: 6px 16px; border-radius: 60px; font-size: 0.8rem; margin-bottom: 20px; display: inline-block; }
+        .toast-msg {
+            position: fixed; bottom: 25px; left: 25px; background: #1e2a3e; color: white;
+            padding: 12px 24px; border-radius: 60px; z-index: 1000; animation: fadein 0.3s;
+        }
+        @keyframes fadein { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 2001; }
+        .modal-content { background: white; border-radius: 28px; padding: 20px; max-width: 90%; }
+        .modal-content img { max-width: 100%; max-height: 80vh; border-radius: 20px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .loading { opacity: 0.6; pointer-events: none; }
+        @media (max-width:700px) { th, td { font-size: 0.7rem; padding: 8px 4px; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="logo"><h1>الرَاقي <i class="fas fa-plane-departure"></i></h1><span>سفر وباصات فاخرة • حجز آمن مع توثيق الهوية</span></div>
+        <div class="sub"><i class="fas fa-ticket-alt"></i> حجز طيران ونقل داخلي • رفع سند إيداع + صورة هوية</div>
+    </div>
+
+    <!-- نموذج حجز العملاء (عام) -->
+    <div class="card">
+        <div class="card-title"><i class="fas fa-pen-alt"></i><span>طلب حجز جديد</span></div>
+        <form id="bookingForm">
+            <div class="form-grid">
+                <div class="input-group"><label><i class="fas fa-user"></i> الاسم الكامل</label><input type="text" id="fullName" required></div>
+                <div class="input-group"><label><i class="fas fa-phone-alt"></i> رقم الجوال</label><input type="tel" id="phone" placeholder="05xxxxxxxx" required></div>
+                <div class="input-group"><label><i class="fas fa-bus"></i> نوع الرحلة</label><select id="tripType" required><option value="طيران">✈️ طيران</option><option value="باصات">🚍 باصات داخلي</option></select></div>
+                <div class="input-group"><label><i class="fas fa-map-marker-alt"></i> الوجهة</label><input type="text" id="destination" placeholder="مثال: الرياض - دبي" required></div>
+                <div class="input-group"><label><i class="fas fa-calendar-alt"></i> تاريخ الرحلة</label><input type="date" id="travelDate" required></div>
+                <div class="input-group"><label><i class="fas fa-ticket"></i> عدد التذاكر</label><input type="number" id="ticketsCount" min="1" max="20" value="1" required></div>
+                <div class="input-group"><label><i class="fas fa-upload"></i> سند الإيداع (بنك/صرافة)</label>
+                    <input type="file" id="receiptFile" accept="image/*" style="display:none;">
+                    <div class="file-label" id="receiptLabel"><i class="fas fa-cloud-upload-alt"></i> اختر صورة السند</div>
+                    <span id="receiptName" class="file-info">لم يتم رفع ملف</span>
+                </div>
+                <div class="input-group"><label><i class="fas fa-id-card"></i> صورة الجواز / البطاقة</label>
+                    <input type="file" id="idFile" accept="image/*" style="display:none;">
+                    <div class="file-label" id="idLabel"><i class="fas fa-id-card"></i> اختر صورة الهوية</div>
+                    <span id="idName" class="file-info">لم يتم رفع ملف</span>
+                </div>
+            </div>
+            <button type="submit" class="btn-submit" id="submitBtn"><i class="fas fa-check-circle"></i> إرسال طلب الحجز</button>
+        </form>
+    </div>
+
+    <!-- لوحة التحكم (تظهر فقط بعد تسجيل الدخول) -->
+    <div id="adminPanel" style="display:none;">
+        <div class="card">
+            <div class="flex-between">
+                <div class="card-title"><i class="fas fa-tachometer-alt"></i><span>لوحة التحكم - جميع طلبات الحجز</span></div>
+                <button id="logoutBtn" class="btn-logout btn-submit" style="width:auto; background:#9e2a2a;"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="bookingsTable">
+                    <thead><tr><th>#</th><th>العميل/الجوال</th><th>النوع</th><th>الوجهة/التاريخ</th><th>عدد</th><th>الحالة</th><th>سند الإيداع</th><th>صورة الهوية</th><th>إجراءات</th></tr></thead>
+                    <tbody id="bookingsTbody"><tr><td colspan="9" style="text-align:center;">جاري تحميل الطلبات...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- مودال عرض الصور -->
+<div id="imageModal" class="modal"><div class="modal-content"><img id="modalImage" src=""><br><button class="close-modal" id="closeModalBtn">إغلاق</button></div></div>
+
+<script type="module">
+    // استيراد الدوال الضرورية من Firebase (تم تعريفها في script type="module" الأول)
+    import { getDatabase, ref, push, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    // تكرار التهيئة (لأننا في module منفصل) لكن نستخدم الكائنات المُهيأة من script الأول
+    // لكن الأسهل نعيد تهيئة محلياً باستخدام نفس config
+    const firebaseConfig = {
+        apiKey: "AIzaSyCJVxsARueQKDK6ETJonkV-ov8jRRLreXg",
+        authDomain: "office-alhami.firebaseapp.com",
+        databaseURL: "https://office-alhami-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "office-alhami",
+        storageBucket: "office-alhami.firebasestorage.app",
+        messagingSenderId: "77683467575",
+        appId: "1:77683467575:web:05c492a00676334528a6b2"
+    };
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const storage = getStorage(app);
+    const auth = getAuth(app);
+
+    // متغيرات
+    let currentUser = null;
+    let bookingsListener = null;
+
+    // عناصر DOM
+    const adminPanel = document.getElementById('adminPanel');
+    const loginOverlay = document.createElement('div');
+    loginOverlay.className = 'login-overlay';
+    loginOverlay.innerHTML = `
+        <div class="login-card">
+            <div class="admin-badge"><i class="fas fa-lock"></i> لوحة تحكم المشرف</div>
+            <h3 style="margin-bottom:20px;">تسجيل الدخول</h3>
+            <input type="email" id="adminEmail" placeholder="البريد الإلكتروني" style="width:100%; margin-bottom:15px; padding:12px; border-radius:30px; border:1px solid #ccc;">
+            <input type="password" id="adminPassword" placeholder="كلمة المرور" style="width:100%; margin-bottom:20px; padding:12px; border-radius:30px; border:1px solid #ccc;">
+            <button id="loginBtn" class="btn-submit" style="margin-top:0;"><i class="fas fa-sign-in-alt"></i> دخول</button>
+            <p style="margin-top:20px; font-size:12px; color:#666;">※ للمسؤول: استخدم البريد admin@office-alhami.com وكلمة المرور admin123 (يمكنك تغييرها من Firebase Console)</p>
+        </div>
+    `;
+    document.body.appendChild(loginOverlay);
+
+    // دوال مساعدة
+    function showMessage(msg, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-msg';
+        toast.style.backgroundColor = isError ? '#b23c1c' : '#1e6f5c';
+        toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${msg}`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    // رفع ملف إلى Firebase Storage
+    async function uploadFile(file, path) {
+        const fileRef = storageRef(storage, path);
+        await uploadBytes(fileRef, file);
+        return await getDownloadURL(fileRef);
+    }
+
+    // إرسال طلب الحجز
+    document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+
+        const fullName = document.getElementById('fullName').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const tripType = document.getElementById('tripType').value;
+        const destination = document.getElementById('destination').value.trim();
+        const travelDate = document.getElementById('travelDate').value;
+        const ticketsCount = parseInt(document.getElementById('ticketsCount').value);
+        const receiptFile = document.getElementById('receiptFile').files[0];
+        const idFile = document.getElementById('idFile').files[0];
+
+        if(!fullName || !phone || !destination || !travelDate || !ticketsCount) {
+            showMessage('يرجى ملء جميع الحقول المطلوبة', true);
+            submitBtn.classList.remove('loading'); submitBtn.disabled = false; return;
+        }
+        if(!receiptFile) { showMessage('يرجى رفع سند الإيداع', true); submitBtn.classList.remove('loading'); submitBtn.disabled = false; return; }
+        if(!idFile) { showMessage('يرجى رفع صورة الجواز أو البطاقة', true); submitBtn.classList.remove('loading'); submitBtn.disabled = false; return; }
+
+        try {
+            const timestamp = Date.now();
+            const receiptPath = `receipts/${timestamp}_${receiptFile.name}`;
+            const idPath = `ids/${timestamp}_${idFile.name}`;
+            const [receiptUrl, idUrl] = await Promise.all([
+                uploadFile(receiptFile, receiptPath),
+                uploadFile(idFile, idPath)
+            ]);
+
+            const newBookingRef = push(ref(db, 'bookings'));
+            const bookingData = {
+                id: newBookingRef.key,
+                fullName, phone, tripType, destination, travelDate, ticketsCount,
+                receiptImageUrl: receiptUrl,
+                idImageUrl: idUrl,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+            await set(newBookingRef, bookingData);
+            showMessage('✅ تم إرسال طلب الحجز بنجاح! سيتم مراجعة البيانات قريباً.');
+            document.getElementById('bookingForm').reset();
+            document.getElementById('receiptName').innerText = 'لم يتم رفع ملف';
+            document.getElementById('idName').innerText = 'لم يتم رفع ملف';
+            document.getElementById('receiptFile').value = '';
+            document.getElementById('idFile').value = '';
+        } catch (err) {
+            console.error(err);
+            showMessage('حدث خطأ أثناء رفع الملفات: ' + err.message, true);
+        } finally {
+            submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
+        }
+    });
+
+    // رفع ملف السند والهوية (تحسين تجربة المستخدم)
+    function setupFileInput(triggerId, fileInputId, displaySpanId) {
+        const trigger = document.getElementById(triggerId);
+        const fileInput = document.getElementById(fileInputId);
+        const displaySpan = document.getElementById(displaySpanId);
+        trigger.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => {
+            if(fileInput.files.length) displaySpan.innerText = fileInput.files[0].name;
+            else displaySpan.innerText = 'لم يتم رفع ملف';
+        });
+    }
+    setupFileInput('receiptLabel', 'receiptFile', 'receiptName');
+    setupFileInput('idLabel', 'idFile', 'idName');
+
+    // عرض الطلبات في لوحة التحكم
+    function renderBookings(bookings) {
+        const tbody = document.getElementById('bookingsTbody');
+        if(!bookings || bookings.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">✨ لا توجد طلبات حجز حتى الآن ✨</td></tr>';
+            return;
+        }
+        let html = '';
+        bookings.forEach((booking, idx) => {
+            const statusClass = booking.status === 'pending' ? 'status-pending' : 'status-approved';
+            const statusText = booking.status === 'pending' ? 'قيد المراجعة' : '✅ مؤكد ومعتمد';
+            html += `<tr>
+                <td>${idx+1}</td>
+                <td><strong>${escapeHtml(booking.fullName)}</strong><br><small>📞 ${escapeHtml(booking.phone)}</small><br><small style="font-size:10px;">${new Date(booking.createdAt).toLocaleString('ar-EG')}</small></td>
+                <td>${booking.tripType}</td>
+                <td>${escapeHtml(booking.destination)}<br><small>📅 ${booking.travelDate}</small></td>
+                <td>${booking.ticketsCount}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td><img src="${booking.receiptImageUrl}" class="thumbnail-img" onclick="window.showImageModal('${booking.receiptImageUrl}')" title="سند الإيداع"></td>
+                <td><img src="${booking.idImageUrl}" class="thumbnail-img" onclick="window.showImageModal('${booking.idImageUrl}')" title="صورة الهوية"></td>
+                <td style="white-space:nowrap;">
+                    ${booking.status !== 'approved' ? `<button class="action-btn approve-btn" onclick="window.approveBooking('${booking.id}')" title="اعتماد الحجز"><i class="fas fa-check-circle"></i></button>` : `<button class="action-btn approve-btn" disabled style="opacity:0.5;"><i class="fas fa-check"></i></button>`}
+                    <button class="action-btn delete-btn" onclick="window.deleteBooking('${booking.id}')" title="حذف الطلب"><i class="fas fa-trash-alt"></i></button>
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html;
+    }
+
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    // استماع حقيقي للطلبات من Firebase
+    function listenToBookings() {
+        if(bookingsListener) bookingsListener();
+        const bookingsRef = ref(db, 'bookings');
+        bookingsListener = onValue(bookingsRef, (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                const bookingsArray = Object.values(data).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                renderBookings(bookingsArray);
+                window.bookingsData = bookingsArray; // للتعديل
+            } else {
+                renderBookings([]);
+            }
+        });
+    }
+
+    // دوال العمليات (اعتماد وحذف)
+    window.approveBooking = async (id) => {
+        if(!currentUser) { showMessage('يجب تسجيل الدخول أولاً', true); return; }
+        try {
+            await update(ref(db, `bookings/${id}`), { status: 'approved' });
+            showMessage('تم اعتماد الحجز بنجاح');
+        } catch(e) { showMessage('خطأ: '+e.message, true); }
+    };
+    window.deleteBooking = async (id) => {
+        if(!currentUser) { showMessage('يجب تسجيل الدخول أولاً', true); return; }
+        if(confirm('حذف الطلب نهائياً؟')) {
+            try {
+                await remove(ref(db, `bookings/${id}`));
+                showMessage('تم حذف الطلب');
+            } catch(e) { showMessage('خطأ: '+e.message, true); }
+        }
+    };
+    window.showImageModal = (url) => {
+        const modal = document.getElementById('imageModal');
+        const img = document.getElementById('modalImage');
+        img.src = url;
+        modal.style.display = 'flex';
+    };
+
+    // نظام المصادقة
+    const loginBtn = document.getElementById('loginBtn');
+    const adminEmail = document.getElementById('adminEmail');
+    const adminPassword = document.getElementById('adminPassword');
+    loginBtn.addEventListener('click', async () => {
+        const email = adminEmail.value.trim();
+        const pwd = adminPassword.value.trim();
+        if(!email || !pwd) { showMessage('أدخل البريد وكلمة المرور', true); return; }
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> جاري الدخول...';
+        loginBtn.disabled = true;
+        try {
+            await signInWithEmailAndPassword(auth, email, pwd);
+            showMessage('تم تسجيل الدخول بنجاح');
+            loginOverlay.style.display = 'none';
+        } catch(err) {
+            let msg = 'فشل تسجيل الدخول: ';
+            if(err.code === 'auth/user-not-found') msg += 'المستخدم غير موجود. تأكد من البريد.';
+            else if(err.code === 'auth/wrong-password') msg += 'كلمة مرور خاطئة.';
+            else msg += err.message;
+            showMessage(msg, true);
+        } finally {
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> دخول';
+            loginBtn.disabled = false;
+        }
+    });
+
+    // مراقبة حالة تسجيل الدخول
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if(user) {
+            loginOverlay.style.display = 'none';
+            adminPanel.style.display = 'block';
+            listenToBookings();
+        } else {
+            adminPanel.style.display = 'none';
+            if(bookingsListener) { bookingsListener(); bookingsListener = null; }
+            loginOverlay.style.display = 'flex';
+        }
+    });
+
+    // تسجيل الخروج
+    document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+        await signOut(auth);
+        showMessage('تم تسجيل الخروج');
+    });
+
+    // إغلاق مودال الصورة
+    document.getElementById('closeModalBtn')?.addEventListener('click', () => {
+        document.getElementById('imageModal').style.display = 'none';
+    });
+    window.addEventListener('click', (e) => { if(e.target === document.getElementById('imageModal')) document.getElementById('imageModal').style.display = 'none'; });
+
+    // تحديد الحد الأدنى للتاريخ
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('travelDate').setAttribute('min', today);
+
+    // إنشاء مستخدم افتراضي تلقائياً إذا لم يكن موجوداً (لراحة المستخدم)
+    // ملاحظة: سيتم إنشاء المستخدم مرة واحدة فقط إذا لم يكن موجوداً
+    (async () => {
+        try {
+            await signInWithEmailAndPassword(auth, 'admin@office-alhami.com', 'admin123');
+        } catch(e) {
+            if(e.code === 'auth/user-not-found') {
+                try {
+                    // إنشاء المستخدم (يتطلب تفعيل Email/Password في Firebase Console)
+                    const { createUserWithEmailAndPassword } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js");
+                    await createUserWithEmailAndPassword(auth, 'admin@office-alhami.com', 'admin123');
+                    console.log('تم إنشاء حساب المشرف تلقائياً. استخدم admin@office-alhami.com / admin123');
+                    showMessage('تم إنشاء حساب المشرف بنجاح. استخدم البيانات للدخول.');
+                } catch(createErr) { console.warn('لا يمكن إنشاء المستخدم تلقائياً. تأكد من تفعيل خدمة المصادقة.', createErr); }
+            }
+        }
+    })();
+</script>
+</body>
+</html>
