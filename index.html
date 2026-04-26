@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مؤسسة عبدالله حبيشان - نظام إدارة المستفيدين</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<style>
+:root{--primary-dark:#1a5c3a;--primary-medium:#27ae60;--primary-light:#2ecc71;--white:#ffffff;--light-gray:#f8f9fa;--text-color:#333333;--border-color:#e0e0e0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:var(--light-gray);color:var(--text-color);line-height:1.6;direction:rtl;}
+.main-header{background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary-medium) 100%);padding:0;box-shadow:0 10px 25px rgba(0,0,0,0.15);position:sticky;top:0;z-index:1000;}
+.top-bar{background:rgba(0,0,0,0.2);padding:8px 0;font-size:0.85rem;}
+.top-bar a{color:var(--white);text-decoration:none;transition:all 0.3s;}
+.top-bar a:hover{color:var(--primary-light);}
+.navbar-brand{font-size:1.4rem;font-weight:700;color:var(--white)!important;}
+.navbar-brand i{color:var(--primary-light);margin-left:10px;}
+.nav-link{color:var(--white)!important;font-weight:500;padding:10px 15px!important;border-radius:8px;transition:all 0.3s;margin:0 3px;}
+.nav-link:hover,.nav-link.active{background:rgba(255,255,255,0.15);color:var(--primary-light)!important;}
+.hero-slider{position:relative;height:500px;overflow:hidden;}
+.hero-slide{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity 1s ease-in-out;display:flex;align-items:center;justify-content:center;}
+.hero-slide.active{opacity:1;}
+.hero-slide::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,rgba(26,92,58,0.85) 0%,rgba(39,174,96,0.75) 100%);z-index:1;}
+.hero-content{position:relative;z-index:2;text-align:center;color:var(--white);max-width:800px;padding:20px;}
+.hero-content h1{font-size:3rem;font-weight:700;margin-bottom:20px;text-shadow:2px 2px 4px rgba(0,0,0,0.3);}
+.hero-content p{font-size:1.3rem;margin-bottom:30px;}
+.btn-hero{background:var(--white);color:var(--primary-dark);padding:12px 35px;border-radius:50px;font-weight:600;font-size:1.1rem;border:none;transition:all 0.3s;box-shadow:0 4px 6px rgba(0,0,0,0.1);}
+.btn-hero:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(0,0,0,0.15);background:var(--primary-light);color:var(--white);}
+.slider-dots{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:3;}
+.dot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.5);cursor:pointer;transition:all 0.3s;}
+.dot.active{background:var(--white);width:30px;border-radius:6px;}
+.announcement-bar{background:linear-gradient(90deg,var(--primary-dark),var(--primary-medium));color:var(--white);padding:12px 0;overflow:hidden;}
+.announcement-content{display:flex;animation:scroll 20s linear infinite;white-space:nowrap;}
+.announcement-item{padding:0 50px;font-weight:500;}
+.announcement-item i{color:var(--primary-light);margin-left:8px;}
+@keyframes scroll{0%{transform:translateX(100%);}100%{transform:translateX(-100%);}}
+.card{border:none;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.1);transition:all 0.3s;overflow:hidden;background:var(--white);}
+.card:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,0.15);}
+.stat-card{background:var(--white);border-radius:12px;padding:25px;box-shadow:0 4px 6px rgba(0,0,0,0.1);transition:all 0.3s;border-right:4px solid var(--primary-medium);}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 10px 25px rgba(0,0,0,0.15);}
+.stat-icon{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--primary-light),var(--primary-medium));display:flex;align-items:center;justify-content:center;color:var(--white);font-size:1.5rem;margin-bottom:15px;}
+.stat-number{font-size:2rem;font-weight:700;color:var(--primary-dark);}
+.stat-label{color:#666;font-size:0.9rem;}
+.btn-primary-custom{background:linear-gradient(135deg,var(--primary-dark),var(--primary-medium));color:var(--white);border:none;padding:10px 25px;border-radius:8px;font-weight:600;transition:all 0.3s;}
+.btn-primary-custom:hover{transform:translateY(-2px);box-shadow:0 4px 6px rgba(0,0,0,0.1);color:var(--white);}
+.form-control,.form-select{border:2px solid var(--border-color);border-radius:8px;padding:12px 15px;transition:all 0.3s;}
+.form-control:focus,.form-select:focus{border-color:var(--primary-medium);box-shadow:0 0 0 0.2rem rgba(39,174,96,0.25);}
+.form-label{font-weight:600;color:#2c3e50;margin-bottom:8px;}
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary-medium) 50%,var(--primary-light) 100%);position:relative;overflow:hidden;}
+.login-page::before{content:'';position:absolute;width:200%;height:200%;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");animation:moveBackground 20s linear infinite;}
+@keyframes moveBackground{0%{transform:translate(0,0);}100%{transform:translate(-50%,-50%);}}
+.login-card{background:var(--white);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.3);padding:50px 40px;width:100%;max-width:450px;position:relative;z-index:1;animation:fadeInUp 0.8s ease-out;}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+.login-logo{text-align:center;margin-bottom:35px;}
+.login-logo i{font-size:4.5rem;color:var(--primary-medium);margin-bottom:15px;display:block;}
+.login-logo h3{color:var(--primary-dark);font-weight:700;font-size:1.5rem;}
+.login-logo p{color:#666;font-size:0.9rem;margin-top:5px;}
+.btn-login{background:linear-gradient(135deg,var(--primary-dark),var(--primary-medium));color:white;border:none;padding:14px;border-radius:12px;font-weight:600;font-size:1.1rem;width:100%;transition:all 0.3s;margin-top:10px;}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(26,92,58,0.3);color:white;}
+.sidebar{background:linear-gradient(180deg,var(--primary-dark) 0%,var(--primary-medium) 100%);min-height:100vh;color:var(--white);padding:20px 0;position:fixed;right:0;top:0;width:260px;z-index:1000;transition:all 0.3s;}
+.sidebar-brand{text-align:center;padding:20px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:20px;}
+.sidebar-brand h4{font-weight:700;margin:0;}
+.sidebar-menu{list-style:none;padding:0;}
+.sidebar-menu li{margin:5px 0;}
+.sidebar-menu a{display:block;padding:12px 20px;color:rgba(255,255,255,0.8);text-decoration:none;transition:all 0.3s;border-right:3px solid transparent;}
+.sidebar-menu a:hover,.sidebar-menu a.active{background:rgba(255,255,255,0.1);color:var(--white);border-right-color:var(--primary-light);}
+.sidebar-menu i{margin-left:10px;width:20px;text-align:center;}
+.main-content{margin-right:260px;padding:30px;min-height:100vh;}
+.register-card{background:white;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.1);padding:40px;max-width:700px;margin:0 auto;}
+.file-upload-wrapper{position:relative;overflow:hidden;display:inline-block;width:100%;}
+.file-upload-wrapper input[type=file]{position:absolute;left:0;top:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.file-upload-button{background:#f8f9fa;border:2px dashed #27ae60;border-radius:12px;padding:30px;text-align:center;color:#27ae60;transition:all 0.3s;width:100%;}
+.file-upload-button:hover{background:#e8f5e9;}
+.image-preview{max-width:200px;max-height:200px;border-radius:10px;display:none;margin-top:10px;border:2px dashed #27ae60;padding:5px;}
+.table thead th{background:linear-gradient(135deg,var(--primary-dark),var(--primary-medium));color:var(--white);font-weight:600;border:none;padding:15px;}
+.table tbody tr{transition:all 0.3s;}
+.table tbody tr:hover{background:rgba(39,174,96,0.05);}
+.table td{padding:15px;vertical-align:middle;}
+.main-footer{background:var(--primary-dark);color:var(--white);padding:40px 0 20px;margin-top:50px;}
+.footer-brand{font-size:1.3rem;font-weight:700;margin-bottom:15px;}
+.footer-links{list-style:none;padding:0;}
+.footer-links li{margin-bottom:10px;}
+.footer-links a{color:rgba(255,255,255,0.7);text-decoration:none;transition:all 0.3s;}
+.footer-links a:hover{color:var(--primary-light);padding-right:5px;}
+.footer-bottom{border-top:1px solid rgba(255,255,255,0.1);padding-top:20px;margin-top:30px;text-align:center;color:rgba(255,255,255,0.6);}
+.profile-card{background:white;border-radius:15px;box-shadow:0 5px 20px rgba(0,0,0,0.1);overflow:hidden;}
+.profile-header{background:linear-gradient(135deg,var(--primary-dark),var(--primary-medium));color:white;padding:30px;text-align:center;}
+.profile-avatar{width:100px;height:100px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 15px;}
+.profile-avatar i{font-size:3rem;color:var(--primary-medium);}
+.info-item{padding:15px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;}
+.info-item:last-child{border-bottom:none;}
+.info-icon{width:40px;height:40px;background:rgba(39,174,96,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-left:15px;color:var(--primary-medium);}
+.status-badge{display:inline-block;padding:8px 20px;border-radius:20px;font-weight:600;}
+.status-pending{background:#fff3cd;color:#856404;}
+.status-approved{background:#d4edda;color:#155724;}
+.status-rejected{background:#f8d7da;color:#721c24;}
+.page-section{display:none;}
+.page-section.active{display:block;animation:fadeInUp 0.5s ease-out;}
+.upload-area{border:3px dashed #27ae60;border-radius:15px;padding:50px;text-align:center;background:#f8f9fa;transition:all 0.3s;cursor:pointer;}
+.upload-area:hover{background:#e8f5e9;border-color:#1a5c3a;}
+.search-box{background:white;border-radius:15px;padding:30px;box-shadow:0 5px 20px rgba(0,0,0,0.1);}
+.search-input{border:2px solid #e0e0e0;border-radius:10px;padding:15px 20px;font-size:1.1rem;}
+.search-input:focus{border-color:#27ae60;box-shadow:0 0 0 0.2rem rgba(39,174,96,0.25);}
+.id-image{max-width:80px;max-height:80px;border-radius:8px;cursor:pointer;}
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-track{background:var(--light-gray);}
+::-webkit-scrollbar-thumb{background:var(--primary-medium);border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:var(--primary-dark);}
+@media(max-width:991.98px){.sidebar{width:100%;position:relative;min-height:auto;}.main-content{margin-right:0;}.hero-content h1{font-size:2rem;}.hero-slider{height:350px;}}
+@media(max-width:767.98px){.hero-content h1{font-size:1.5rem;}.hero-content p{font-size:1rem;}.login-card{padding:25px;margin:20px;}.stat-card{margin-bottom:15px;}}
+</style>
+</head>
+<body>
+
+<!-- ========== PAGE: HOME ========== -->
+<div id="page-home" class="page-section active">
+<header class="main-header">
+<div class="top-bar">
+<div class="container">
+<div class="row">
+<div class="col-md-6 text-md-start text-center">
+<small><i class="fas fa-phone me-2"></i>0500000000</small>
+<small class="ms-3"><i class="fas fa-envelope me-2"></i>info@habishan.org</small>
+</div>
+<div class="col-md-6 text-md-end text-center">
+<a href="#" onclick="showPage('login')" class="me-3"><i class="fas fa-sign-in-alt me-1"></i>تسجيل الدخول</a>
+<a href="#" onclick="showPage('register')"><i class="fas fa-user-plus me-1"></i>تسجيل جديد</a>
+</div>
+</div>
+</div>
+</div>
+<nav class="navbar navbar-expand-lg">
+<div class="container">
+<a class="navbar-brand" href="#" onclick="showPage('home')">
+<i class="fas fa-hands-holding-heart"></i>مؤسسة عبدالله حبيشان
+</a>
+<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+<span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+</button>
+<div class="collapse navbar-collapse" id="navbarNav">
+<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+<li class="nav-item"><a class="nav-link active" href="#" onclick="showPage('home')"><i class="fas fa-home me-1"></i>الرئيسية</a></li>
+<li class="nav-item"><a class="nav-link" href="#about"><i class="fas fa-info-circle me-1"></i>عن المؤسسة</a></li>
+<li class="nav-item"><a class="nav-link" href="#services"><i class="fas fa-hand-holding-heart me-1"></i>خدماتنا</a></li>
+<li class="nav-item"><a class="nav-link" href="#contact"><i class="fas fa-phone me-1"></i>تواصل معنا</a></li>
+</ul>
+</div>
+</div>
+</nav>
+</header>
+
+<section class="hero-slider">
+<div class="hero-slide active" style="background: linear-gradient(135deg, #1a5c3a, #27ae60);">
+<div class="hero-content">
+<h1>مؤسسة عبدالله حبيشان للتنمية والأعمال الخيرية</h1>
+<p>نحو مجتمع متكافل ومتماسك - نمد يد العون للمحتاجين</p>
+<button class="btn btn-hero" onclick="showPage('register')">سجل كمستفيد الآن</button>
+</div>
+</div>
+<div class="hero-slide" style="background: linear-gradient(135deg, #27ae60, #2ecc71);">
+<div class="hero-content">
+<h1>الأعمال الخيرية</h1>
+<p>نمد يد العون للمحتاجين ونسعى لتحقيق التكافل الاجتماعي</p>
+<button class="btn btn-hero" onclick="showPage('register')">سجل كمستفيد الآن</button>
+</div>
+</div>
+<div class="slider-dots">
+<span class="dot active" onclick="showSlide(0)"></span>
+<span class="dot" onclick="showSlide(1)"></span>
+</div>
+</section>
+
+<div class="announcement-bar">
+<div class="announcement-content">
+<span class="announcement-item"><i class="fas fa-bullhorn"></i><strong>تنبيه هام:</strong> سيتم توزيع السلات الغذائية يوم السبت القادم</span>
+<span class="announcement-item"><i class="fas fa-bullhorn"></i><strong>إعلان:</strong> تم فتح باب التسجيل للمستفيدين الجدد</span>
+</div>
+</div>
+
+<section class="py-5">
+<div class="container">
+<div class="row">
+<div class="col-md-4 mb-4">
+<div class="stat-card text-center">
+<div class="stat-icon mx-auto"><i class="fas fa-users"></i></div>
+<div class="stat-number" id="stat-beneficiaries">0</div>
+<div class="stat-label">مستفيد مسجل</div>
+</div>
+</div>
+<div class="col-md-4 mb-4">
+<div class="stat-card text-center">
+<div class="stat-icon mx-auto"><i class="fas fa-clock"></i></div>
+<div class="stat-number" id="stat-pending">0</div>
+<div class="stat-label">طلب قيد المراجعة</div>
+</div>
+</div>
+<div class="col-md-4 mb-4">
+<div class="stat-card text-center">
+<div class="stat-icon mx-auto"><i class="fas fa-gift"></i></div>
+<div class="stat-number" id="stat-deliveries">0</div>
+<div class="stat-label">توزيع قادم</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="about" class="py-5" style="background: white;">
+<div class="container">
+<div class="row align-items-center">
+<div class="col-lg-6 mb-4">
+<h2 class="mb-4" style="color: #1a5c3a; font-weight: 700;"><i class="fas fa-mosque me-2"></i>عن المؤسسة</h2>
+<p class="lead text-muted">مؤسسة عبدالله حبيشان للتنمية والأعمال الخيرية هي مؤسسة خيرية غير ربحية تهدف إلى خدمة المجتمع ومساعدة المحتاجين.</p>
+<p>تسعى المؤسسة إلى تحقيق التكافل الاجتماعي من خلال توزيع السلات الغذائية والمساعدات المالية والعينية للأسر المحتاجة.</p>
+<div class="mt-4">
+<button class="btn btn-primary-custom me-2" onclick="showPage('register')"><i class="fas fa-user-plus me-2"></i>سجل كمستفيد</button>
+<button class="btn btn-outline-success" onclick="showPage('login')"><i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول</button>
+</div>
+</div>
+<div class="col-lg-6">
+<div class="card p-4">
+<div class="row text-center">
+<div class="col-6 mb-3"><i class="fas fa-hand-holding-heart fa-2x text-success mb-2"></i><h5>الأعمال الخيرية</h5></div>
+<div class="col-6 mb-3"><i class="fas fa-utensils fa-2x text-success mb-2"></i><h5>السلات الغذائية</h5></div>
+<div class="col-6"><i class="fas fa-hand-holding-usd fa-2x text-success mb-2"></i><h5>المساعدات المالية</h5></div>
+<div class="col-6"><i class="fas fa-graduation-cap fa-2x text-success mb-2"></i><h5>دعم التعليم</h5></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="services" class="py-5">
+<div class="container">
+<div class="text-center mb-5">
+<h2 style="color: #1a5c3a; font-weight: 700;"><i class="fas fa-cogs me-2"></i>خدماتنا</h2>
+<p class="text-muted">نقدم مجموعة متنوعة من الخدمات لدعم المجتمع</p>
+</div>
+<div class="row">
+<div class="col-md-4 mb-4">
+<div class="card h-100 text-center p-4">
+<i class="fas fa-box-open fa-3x text-success mb-3"></i>
+<h4>توزيع السلات الغذائية</h4>
+<p class="text-muted">توزيع سلة غذائية شهرية تحتوي على المواد الأساسية للأسر المحتاجة</p>
+</div>
+</div>
+<div class="col-md-4 mb-4">
+<div class="card h-100 text-center p-4">
+<i class="fas fa-money-bill-wave fa-3x text-success mb-3"></i>
+<h4>المساعدات المالية</h4>
+<p class="text-muted">تقديم مساعدات مالية عاجلة للأسر في حالات الطوارئ</p>
+</div>
+</div>
+<div class="col-md-4 mb-4">
+<div class="card h-100 text-center p-4">
+<i class="fas fa-book fa-3x text-success mb-3"></i>
+<h4>دعم التعليم</h4>
+<p class="text-muted">دعم الطلاب المحتاجين بالقرطاسية والمصروفات الدراسية</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<footer class="main-footer" id="contact">
+<div class="container">
+<div class="row">
+<div class="col-lg-4 mb-4">
+<div class="footer-brand"><i class="fas fa-hands-holding-heart me-2"></i>مؤسسة عبدالله حبيشان</div>
+<p class="text-white-50">مؤسسة خيرية غير ربحية تهدف إلى خدمة المجتمع ومساعدة المحتاجين.</p>
+</div>
+<div class="col-lg-4 mb-4">
+<h5 class="text-white mb-3">روابط سريعة</h5>
+<ul class="footer-links">
+<li><a href="#" onclick="showPage('home')"><i class="fas fa-home me-2"></i>الرئيسية</a></li>
+<li><a href="#" onclick="showPage('login')"><i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول</a></li>
+<li><a href="#" onclick="showPage('register')"><i class="fas fa-user-plus me-2"></i>تسجيل مستفيد</a></li>
+</ul>
+</div>
+<div class="col-lg-4 mb-4">
+<h5 class="text-white mb-3">تواصل معنا</h5>
+<ul class="footer-links">
+<li><i class="fas fa-map-marker-alt me-2"></i>المملكة العربية السعودية</li>
+<li><i class="fas fa-phone me-2"></i>0500000000</li>
+<li><i class="fas fa-envelope me-2"></i>info@habishan.org</li>
+</ul>
+</div>
+</div>
+<div class="footer-bottom">
+<p class="mb-0">جميع الحقوق محفوظة 2026 مؤسسة عبدالله حبيشان للتنمية والأعمال الخيرية</p>
+</div>
+</div>
+</footer>
+</div>
+
+<!-- ========== PAGE: LOGIN ========== -->
+<div id="page-login" class="page-section">
+<div class="login-page">
+<div class="login-card">
+<div class="login-logo">
+<i class="fas fa-hands-holding-heart"></i>
+<h3>مؤسسة عبدالله حبيشان</h3>
+<p>للتنمية والأعمال الخيرية</p>
+</div>
+<div id="login-error" class="alert alert-danger d-none"><i class="fas fa-exclamation-circle me-2"></i><span id="login-error-msg"></span></div>
+<form id="loginForm" onsubmit="return handleLogin(event)">
+<div class="form-floating mb-3">
+<input type="email" class="form-control" id="login-email" placeholder=" " required>
+<label for="login-email"><i class="fas fa-envelope me-2 text-muted"></i>البريد الإلكتروني</label>
+</div>
+<div class="form-floating mb-4">
+<input type="password" class="form-control" id="login-password" placeholder=" " required>
+<label for="login-password"><i class="fas fa-lock me-2 text-muted"></i>كلمة المرور</label>
+</div>
+<button type="submit" class="btn btn-login"><i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول</button>
+</form>
+<div class="text-center mt-4" style="border-top: 1px solid #eee; padding-top: 20px;">
+<p class="mb-0">ليس لديك حساب؟ <a href="#" onclick="showPage('register')" style="color: #27ae60; font-weight: 600; text-decoration: none;">سجل كمستفيد جديد</a></p>
+</div>
+<div class="text-center mt-3">
+<a href="#" onclick="showPage('home')" style="color: #666; text-decoration: none;"><i class="fas fa-arrow-right me-2"></i>العودة للرئيسية</a>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ========== PAGE: REGISTER ========== -->
+<div id="page-register" class="page-section">
+<div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); min-height: 100vh; padding: 40px 0;">
+<div class="container">
+<div class="register-card">
+<div class="text-center mb-4">
+<i class="fas fa-user-plus fa-3x text-success mb-3"></i>
+<h3 style="color: #1a5c3a; font-weight: 700;">تسجيل مستفيد جديد</h3>
+<p class="text-muted">يرجى ملء البيانات التالية بدقة</p>
+</div>
+<div id="register-success" class="alert alert-success d-none"><i class="fas fa-check-circle me-2"></i><span id="register-success-msg"></span></div>
+<div id="register-error" class="alert alert-danger d-none"><i class="fas fa-exclamation-circle me-2"></i><span id="register-error-msg"></span></div>
+<form id="registerForm" onsubmit="return handleRegister(event)">
+<div class="row">
+<div class="col-md-12 mb-3">
+<label class="form-label fw-bold"><i class="fas fa-user me-2 text-success"></i>الاسم الكامل</label>
+<input type="text" class="form-control" id="reg-fullname" required placeholder="أدخل الاسم الرباعي">
+</div>
+<div class="col-md-6 mb-3">
+<label class="form-label fw-bold"><i class="fas fa-envelope me-2 text-success"></i>البريد الإلكتروني (اسم المستخدم)</label>
+<input type="email" class="form-control" id="reg-email" required placeholder="example@domain.com">
+</div>
+<div class="col-md-6 mb-3">
+<label class="form-label fw-bold"><i class="fas fa-lock me-2 text-success"></i>كلمة المرور</label>
+<input type="password" class="form-control" id="reg-password" required placeholder="أدخل كلمة مرور قوية">
+</div>
+<div class="col-md-6 mb-3">
+<label class="form-label fw-bold"><i class="fas fa-id-card me-2 text-success"></i>نوع الهوية</label>
+<select class="form-select" id="reg-idtype" required>
+<option value="national_id">بطاقة الهوية الوطنية</option>
+<option value="passport">جواز السفر</option>
+</select>
+</div>
+<div class="col-md-6 mb-3">
+<label class="form-label fw-bold"><i class="fas fa-hashtag me-2 text-success"></i>رقم الهوية / الجواز</label>
+<input type="text" class="form-control" id="reg-idnumber" required placeholder="أدخل رقم الهوية أو الجواز">
+</div>
+<div class="col-md-12 mb-3">
+<label class="form-label fw-bold"><i class="fas fa-phone me-2 text-success"></i>رقم الجوال</label>
+<input type="tel" class="form-control" id="reg-phone" required placeholder="05xxxxxxxx" pattern="05[0-9]{8}">
+</div>
+<div class="col-md-12 mb-4">
+<label class="form-label fw-bold"><i class="fas fa-image me-2 text-success"></i>صورة الهوية</label>
+<div class="file-upload-wrapper">
+<div class="file-upload-button" onclick="document.getElementById('reg-idimage').click()">
+<i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
+<p class="mb-0">اضغط هنا لرفع صورة الهوية</p>
+<small class="text-muted">JPG, PNG - الحد الأقصى 5 ميجابايت</small>
+</div>
+<input type="file" id="reg-idimage" accept="image/*" onchange="previewImage(this, 'reg-imagePreview')">
+</div>
+<img id="reg-imagePreview" class="image-preview" alt="معاينة الصورة">
+</div>
+</div>
+<button type="submit" class="btn btn-login"><i class="fas fa-paper-plane me-2"></i>تقديم الطلب</button>
+</form>
+<div class="text-center mt-4">
+<a href="#" onclick="showPage('login')" style="color: #27ae60; font-weight: 500; text-decoration: none;"><i class="fas fa-arrow-right me-2"></i>العودة إلى تسجيل الدخول</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ========== PAGE: ADMIN ========== -->
+<div id="page-admin" class="page-section">
+<div class="d-flex">
+<aside class="sidebar">
+<div class="sidebar-brand">
+<i class="fas fa-hands-holding-heart fa-2x mb-2"></i>
+<h5 class="mb-0">مؤسسة عبدالله حبيشان</h5>
+<small>لوحة تحكم المدير</small>
+</div>
+<ul class="sidebar-menu">
+<li><a href="#" class="active" onclick="showAdminTab('admin-dashboard')"><i class="fas fa-tachometer-alt"></i>الرئيسية</a></li>
+<li><a href="#" onclick="showAdminTab('admin-users')"><i class="fas fa-users"></i>إدارة المستخدمين</a></li>
+<li><a href="#" onclick="showAdminTab('admin-beneficiaries')"><i class="fas fa-user-friends"></i>إدارة المستفيدين</a></li>
+<li><a href="#" onclick="showAdminTab('admin-requests')"><i class="fas fa-clipboard-list"></i>إدارة الطلبات</a></li>
+<li><a href="#" onclick="showAdminTab('admin-reports')"><i class="fas fa-chart-bar"></i>التقارير</a></li>
+<li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i>تسجيل الخروج</a></li>
+</ul>
+</aside>
+<main class="main-content" style="background: #f8f9fa; width: 100%;">
+<div id="admin-dashboard" class="admin-tab">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2><i class="fas fa-tachometer-alt me-2 text-success"></i>لوحة التحكم</h2>
+<span class="badge bg-success"><i class="fas fa-calendar me-1"></i><span id="admin-date"></span></span>
+</div>
+<div class="row mb-4">
+<div class="col-xl-3 col-md-6 mb-4">
+<div class="card border-0 shadow-sm" style="border-right: 4px solid #27ae60;">
+<div class="card-body">
+<div class="d-flex justify-content-between align-items-center">
+<div><h6 class="text-muted mb-1">إجمالي المستخدمين</h6><h3 class="mb-0 text-success" id="admin-stat-users">0</h3></div>
+<div class="bg-success bg-opacity-10 p-3 rounded"><i class="fas fa-users fa-2x text-success"></i></div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-xl-3 col-md-6 mb-4">
+<div class="card border-0 shadow-sm" style="border-right: 4px solid #17a2b8;">
+<div class="card-body">
+<div class="d-flex justify-content-between align-items-center">
+<div><h6 class="text-muted mb-1">إجمالي المستفيدين</h6><h3 class="mb-0 text-info" id="admin-stat-beneficiaries">0</h3></div>
+<div class="bg-info bg-opacity-10 p-3 rounded"><i class="fas fa-user-friends fa-2x text-info"></i></div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-xl-3 col-md-6 mb-4">
+<div class="card border-0 shadow-sm" style="border-right: 4px solid #ffc107;">
+<div class="card-body">
+<div class="d-flex justify-content-between align-items-center">
+<div><h6 class="text-muted mb-1">طلبات قيد المراجعة</h6><h3 class="mb-0 text-warning" id="admin-stat-pending">0</h3></div>
+<div class="bg-warning bg-opacity-10 p-3 rounded"><i class="fas fa-clock fa-2x text-warning"></i></div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-xl-3 col-md-6 mb-4">
+<div class="card border-0 shadow-sm" style="border-right: 4px solid #28a745;">
+<div class="card-body">
+<div class="d-flex justify-content-between align-items-center">
+<div><h6 class="text-muted mb-1">مستفيدين معتمدين</h6><h3 class="mb-0 text-success" id="admin-stat-approved">0</h3></div>
+<div class="bg-success bg-opacity-10 p-3 rounded"><i class="fas fa-check-circle fa-2x text-success"></i></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="card shadow-sm">
+<div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-clipboard-list me-2 text-success"></i>آخر الطلبات</h5></div>
+<div class="card-body p-0">
+<div class="table-responsive">
+<table class="table table-hover mb-0">
+<thead class="table-light"><tr><th>#</th><th>المستفيد</th><th>رقم الهوية</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+<tbody id="admin-recent-requests"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<div id="admin-users" class="admin-tab" style="display:none;">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2><i class="fas fa-users me-2 text-success"></i>إدارة المستخدمين</h2>
+<button class="btn btn-success" onclick="showAddUserModal()"><i class="fas fa-plus me-2"></i>إضافة مستخدم</button>
+</div>
+<div class="card shadow-sm">
+<div class="card-body">
+<div class="table-responsive">
+<table class="table table-hover">
+<thead class="table-light"><tr><th>#</th><th>الاسم</th><th>البريد الإلكتروني</th><th>الدور</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+<tbody id="admin-users-table"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<div id="admin-beneficiaries" class="admin-tab" style="display:none;">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2><i class="fas fa-user-friends me-2 text-success"></i>إدارة المستفيدين</h2>
+<div>
+<button class="btn btn-outline-secondary btn-sm" onclick="filterBeneficiaries('all')">الكل</button>
+<button class="btn btn-outline-warning btn-sm" onclick="filterBeneficiaries('pending')">قيد المراجعة</button>
+<button class="btn btn-outline-success btn-sm" onclick="filterBeneficiaries('approved')">معتمدين</button>
+<button class="btn btn-outline-danger btn-sm" onclick="filterBeneficiaries('rejected')">مرفوضين</button>
+</div>
+</div>
+<div class="card shadow-sm">
+<div class="card-body">
+<div class="table-responsive">
+<table class="table table-hover">
+<thead class="table-light"><tr><th>#</th><th>الاسم</th><th>رقم الهوية</th><th>الجوال</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+<tbody id="admin-beneficiaries-table"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<div id="admin-requests" class="admin-tab" style="display:none;">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2><i class="fas fa-clipboard-list me-2 text-success"></i>إدارة الطلبات</h2>
+</div>
+<div class="card shadow-sm">
+<div class="card-body">
+<div class="table-responsive">
+<table class="table table-hover">
+<thead class="table-light"><tr><th>#</th><th>المستفيد</th><th>رقم الهوية</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+<tbody id="admin-requests-table"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+
+<div id="admin-reports" class="admin-tab" style="display:none;">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2><i class="fas fa-chart-bar me-2 text-success"></i>التقارير والإحصائيات</h2>
+<button class="btn btn-success" onclick="window.print()"><i class="fas fa-print me-2"></i>طباعة التقرير</button>
+</div>
+<div class="row mb-4">
+<div class="col-md-6 mb-4">
+<div class="card shadow-sm">
+<div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-users me-2 text-success"></i>حالة المستفيدين</h5></div>
+<div class="card-body"><canvas id="chartBeneficiaries" height="200"></canvas></div>
+</div>
+</div>
+<div class="col-md-6 mb-4">
+<div class="card shadow-sm">
+<div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-clipboard-list me-2 text-success"></i>حالة الطلبات</h5></div>
+<div class="card-body"><canvas id="chartRequests" height="200"></canvas></div>
+</div>
+</div>
+</div>
+<div class="card shadow-sm">
+<div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-history me-2 text-success"></i>سجل الأحداث</h5></div>
+<div class="card-body p-0">
+<div class="table-responsive">
+<table class="table table-hover mb-0">
+<thead class="table-light"><tr><th>#</th><th>الإجراء</th><th>التفاصيل</th><th>التاريخ</th></tr></thead>
+<tbody id="admin-logs-table"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+<!-- ========== PAGE: EMPLOYEE ========== -->
+<div id="page-employee" class="page-section">
+<div class="d-flex">
+<aside class="sidebar">
+<div class="sidebar-brand">
+<i class="fas fa-hands-holding-heart fa-2x mb-2"></i>
+<h5 class="mb-0">مؤسسة عبدالله حبيشان</h5>
+<small>لوحة تحكم الموظف</small>
+</div>
+<ul class="sidebar-menu">
+<li><a href="#" class="active" onclick="showEmployeeTab('emp-dashboard')"><i class="fas fa-tachometer-alt"></i>الرئيسية</a></li>
+<li><a href="#" onclick="showEmployeeTab('emp-upload')"><i class="fas fa-file-excel"></i>رفع ملف Excel</a></li>
+<li><a href="#" onclick="showEmployeeTab('emp-search')"><i class="fas fa-search"></i>البحث عن مستفيد</a></li>
+<li><a href="#" onclick="showEmployeeTab('emp-requests')"><i class="fas fa-clipboard-list"></i>إدارة الطلبات</a></li>
+<li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i>تسجيل الخروج</a></li>
+</ul>
+</aside>
+<main class="main-content" style="background: #f8f9fa; width: 100%;">
+<div id="emp-dashboard" class="emp-tab">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2><i class="fas fa-tachometer-alt me-2 text-success"></i>لوحة تحكم الموظف</h2>
+<span class="badge bg-success"><i class="fas fa-calendar me-1"></i><span id="emp-date"></span></span>
+</div>
+<div class="row mb-4">
+<div class="col-xl-4 col-md-6 mb-4">
+<div class="card border-0 shadow-sm" style="border-right: 4px solid #17a2b8;">
+<div class="card-body">
+<div class="d-flex justify-content-between align-items-center">
+<div><h6 class="text-muted mb-1">إجمالي المستفيدين</h6><h3 class="mb-0 text-info" id="emp-stat-beneficiaries">0</h3></div>
+<div class="bg-info bg-opacity-10 p-3 rounded"><i class="fas fa-user-friends fa-2x text-info"></i></div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-xl-4 col-md-6 mb-4">
+<div class="card border-0 shadow-sm" style="border-right: 4px solid #ffc107;">
+<div class="card-body">
+<div class="d-flex justify-content-between align-items-center">
+<div><h6 class="text-muted mb-1">طلبات قيد المراجعة</h6><h3 class="mb-0 text-warning" id="emp-stat-pending">0</h3></div>
+<div class="bg-warning bg-opacity-10 p-3 rounded"><i class="fas fa-clock fa-2x text-warning"></i></div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-xl-4 col-md-6 mb-4">
+<div class="card border-0 shadow-sm" style="border-right: 4px solid #28a745;">
+<div class="card-body">
+<div class="d-flex justify-content-between align-items-center">
+<div><h6 class="text-muted mb-1">مستفيدين معتمدين</h6><h3 class="mb-0 text-success" id="emp-stat-approved">0</h3></div>
+<div class="bg-success bg-opacity-10 p-3 rounded"><i class="fas fa-check-circle fa-2x text-success"></i></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-lg-8 mb-4">
+<div class="card shadow-sm">
+<div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-file-excel me-2 text-success"></i>رفع ملف Excel</h5></div>
+<div class="card-body text-center py-4">
+<i class="fas fa-file-excel fa-4x text-success mb-3"></i>
+<h5>رفع قائمة المستفيدين</h5>
+<p class="text-muted">يمكنك رفع ملف Excel يحتوي على بيانات المستفيدين</p>
+<button class="btn btn-success btn-lg" onclick="showEmployeeTab('emp-upload')"><i class="fas fa-upload me-2"></i>رفع ملف Excel</button>
+</div>
+</div>
+</div>
+<div class="col-lg-4 mb-4">
+<div class="card shadow-sm">
+<div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-search me-2 text-success"></i>بحث سريع</h5></div>
+<div class="card-body">
+<div class="input-group">
+<input type="text" class="form-control" id="emp-quick-search" placeholder="اسم أو رقم هوية...">
+<button class="btn btn-success" onclick="quickSearch()"><i class="fas fa-search"></i></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="emp-upload" class="emp-tab" style="display:none;">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2><i class="fas fa-file-excel me-2 text-success"></i>رفع ملف Excel</h2>
+</div>
+<div class="row">
+<div class="col-lg-8 mx-auto">
+<div class="card shadow-sm">
+<div class="card-body">
+<div class="upload-area" onclick="document.getElementById('excel-file').click()">
+<i class="fas fa-cloud-upload-alt fa-4x text-success mb-3"></i>
+<h4>اضغط هنا لرفع ملف Excel</h4>
+<p class="text-muted">أو اسحب الملف وأفلته هنا</p>
+<small class="text-muted">الأنواع المسموحة: .xlsx, .xls, .csv</small>
+</div>
+<input type="file" id="excel-file" class="d-none" accept=".xlsx,.xls,.csv" onchange="handleExcelUpload(this)">
+<div id="excel-info" class="alert alert-info d-none mt-3"><i class="fas fa-file-excel me-2"></i><span id="excel-filename"></span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="emp-search" class="emp-tab" style="display:none;">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2><i class="fas fa-search me-2 text-success"></i>البحث عن مستفيد</h2>
+</div>
+<div class="search-box mb-4">
+<div class="input-group input-group-lg">
+<input type="text" class="form-control search-input" id="search-query" placeholder="ابحث بالاسم أو رقم الهوية أو رقم الجوال...">
+<button class="btn btn-success px-4" onclick="performSearch()"><i class="fas fa-search me-2"></i>بحث</button>
+</div>
+</div>
+<div id="search-results"></div>
+</div>
+<div id="emp-requests" class="emp-tab" style="display:none;">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2><i class="fas fa-clipboard-list me-2 text-success"></i>إدارة الطلبات</h2>
+</div>
+<div class="card shadow-sm">
+<div class="card-body">
+<div class="table-responsive">
+<table class="table table-hover">
+<thead class="table-light"><tr><th>#</th><th>المستفيد</th><th>رقم الهوية</th><th>الحالة</th><th>التاريخ</th></tr></thead>
+<tbody id="emp-requests-table"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+<!-- ========== PAGE: BENEFICIARY ========== -->
+<div id="page-beneficiary" class="page-section">
+<div class="d-flex">
+<aside class="sidebar">
+<div class="sidebar-brand">
+<i class="fas fa-hands-holding-heart fa-2x mb-2"></i>
+<h5 class="mb-0">مؤسسة عبدالله حبيشان</h5>
+<small>لوحة تحكم المستفيد</small>
+</div>
+<ul class="sidebar-menu">
+<li><a href="#" class="active"><i class="fas fa-tachometer-alt"></i>بياناتي</a></li>
+<li><a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i>تسجيل الخروج</a></li>
+</ul>
+</aside>
+<main class="main-content" style="background: #f8f9fa; width: 100%;">
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2><i class="fas fa-user me-2 text-success"></i>بيانات المستفيد</h2>
+<span class="badge bg-success"><i class="fas fa-calendar me-1"></i><span id="ben-date"></span></span>
+</div>
+<div class="row">
+<div class="col-lg-8">
+<div class="profile-card mb-4">
+<div class="profile-header">
+<div class="profile-avatar"><i class="fas fa-user"></i></div>
+<h4 class="mb-1" id="ben-name">-</h4>
+<p class="mb-0 opacity-75">مستفيد مسجل</p>
+</div>
+<div class="p-4">
+<div class="info-item">
+<div class="info-icon"><i class="fas fa-id-card"></i></div>
+<div><small class="text-muted d-block">رقم الهوية / الجواز</small><strong id="ben-idnumber">-</strong></div>
+</div>
+<div class="info-item">
+<div class="info-icon"><i class="fas fa-passport"></i></div>
+<div><small class="text-muted d-block">نوع الهوية</small><strong id="ben-idtype">-</strong></div>
+</div>
+<div class="info-item">
+<div class="info-icon"><i class="fas fa-phone"></i></div>
+<div><small class="text-muted d-block">رقم الجوال</small><strong id="ben-phone">-</strong></div>
+</div>
+<div class="info-item">
+<div class="info-icon"><i class="fas fa-box-open"></i></div>
+<div><small class="text-muted d-block">محتويات السلة</small><strong id="ben-basket">لم يتم تحديد محتويات السلة بعد</strong></div>
+</div>
+<div class="info-item">
+<div class="info-icon"><i class="fas fa-calendar-alt"></i></div>
+<div><small class="text-muted d-block">موعد الاستلام</small><strong id="ben-delivery">لم يتم تحديد موعد الاستلام</strong></div>
+</div>
+<div class="info-item">
+<div class="info-icon"><i class="fas fa-sticky-note"></i></div>
+<div><small class="text-muted d-block">ملاحظات</small><strong id="ben-notes">لا توجد ملاحظات</strong></div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-lg-4">
+<div class="card shadow-sm mb-4">
+<div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-info-circle me-2 text-success"></i>حالة الطلب</h5></div>
+<div class="card-body text-center">
+<div id="ben-status-badge" class="status-badge status-pending mb-3"><i class="fas fa-clock me-2"></i>قيد المراجعة</div>
+<p class="text-muted" id="ben-status-text">طلبك قيد المراجعة من قبل الإدارة. سيتم إشعارك فور قبول الطلب.</p>
+</div>
+</div>
+<div class="card shadow-sm">
+<div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-image me-2 text-success"></i>صورة الهوية</h5></div>
+<div class="card-body text-center">
+<div id="ben-idimage-container">
+<div class="text-center text-muted py-5"><i class="fas fa-image fa-3x mb-3"></i><p>لا توجد صورة هوية</p></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+<!-- Modal for adding user -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header" style="background: linear-gradient(135deg, #1a5c3a, #27ae60); color: white;">
+<h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>إضافة مستخدم جديد</h5>
+<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+<div class="mb-3"><label class="form-label">الاسم الكامل</label><input type="text" class="form-control" id="new-user-fullname" required></div>
+<div class="mb-3"><label class="form-label">البريد الإلكتروني</label><input type="email" class="form-control" id="new-user-email" required></div>
+<div class="mb-3"><label class="form-label">كلمة المرور</label><input type="password" class="form-control" id="new-user-password" required></div>
+<div class="mb-3"><label class="form-label">الدور</label><select class="form-select" id="new-user-role"><option value="employee">موظف</option><option value="admin">مدير</option></select></div>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+<button type="button" class="btn btn-success" onclick="addUser()"><i class="fas fa-save me-2"></i>حفظ</button>
+</div>
+</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCJVxsARueQKDK6ETJonkV-ov8jRRLreXg",
+  authDomain: "office-alhami.firebaseapp.com",
+  databaseURL: "https://office-alhami-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "office-alhami",
+  storageBucket: "office-alhami.firebasestorage.app",
+  messagingSenderId: "77683467575",
+  appId: "1:77683467575:web:05c492a00676334528a6b2",
+  measurementId: "G-6FHJPM2RHL"
+};
+
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+const storage = firebase.storage();
+
+// Global variables
+let currentUser = null;
+let currentUserRole = null;
+let beneficiaryFilter = 'all';
+let currentSlide = 0;
+
+// Helper Functions
+function showPage(page) {
+    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + page).classList.add('active');
+    window.scrollTo(0,0);
+    if (page === 'admin') loadAdminDashboard();
+    if (page === 'employee') loadEmployeeDashboard();
+    if (page === 'beneficiary') loadBeneficiaryDashboard();
+}
+
+function showAdminTab(tab) {
+    document.querySelectorAll('.admin-tab').forEach(t => t.style.display = 'none');
+    document.getElementById(tab).style.display = 'block';
+    if (tab === 'admin-users') loadUsersTable();
+    if (tab === 'admin-beneficiaries') loadBeneficiariesTable();
+    if (tab === 'admin-requests') loadRequestsTable();
+    if (tab === 'admin-reports') loadReports();
+}
+
+function showEmployeeTab(tab) {
+    document.querySelectorAll('.emp-tab').forEach(t => t.style.display = 'none');
+    document.getElementById(tab).style.display = 'block';
+    if (tab === 'emp-requests') loadEmpRequestsTable();
+}
+
+function showSlide(index) {
+    document.querySelectorAll('.hero-slide').forEach((slide,i)=>slide.classList.toggle('active',i===index));
+    document.querySelectorAll('.dot').forEach((dot,i)=>dot.classList.toggle('active',i===index));
+    currentSlide = index;
+}
+setInterval(()=>{
+    const slides = document.querySelectorAll('.hero-slide');
+    if(slides.length) showSlide((currentSlide+1)%slides.length);
+},5000);
+
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Authentication & Login
+async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    const errorDiv = document.getElementById('login-error');
+    try {
+        const userCred = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCred.user;
+        const snapshot = await db.ref(`users/${user.uid}`).once('value');
+        const userData = snapshot.val();
+        if (!userData || !userData.isActive) throw new Error('الحساب غير نشط أو غير مصرح به');
+        currentUser = user;
+        currentUserRole = userData.role;
+        addLog('تسجيل دخول', `المستخدم: ${userData.fullName}`);
+        if (userData.role === 'admin') showPage('admin');
+        else if (userData.role === 'employee') showPage('employee');
+        else showPage('beneficiary');
+    } catch (err) {
+        errorDiv.classList.remove('d-none');
+        document.getElementById('login-error-msg').textContent = err.message;
+    }
+    return false;
+}
+
+async function logout() {
+    await auth.signOut();
+    currentUser = null;
+    currentUserRole = null;
+    showPage('home');
+}
+
+// Register Beneficiary
+async function handleRegister(e) {
+    e.preventDefault();
+    const fullName = document.getElementById('reg-fullname').value;
+    const email = document.getElementById('reg-email').value;
+    const password = document.getElementById('reg-password').value;
+    const idType = document.getElementById('reg-idtype').value;
+    const idNumber = document.getElementById('reg-idnumber').value;
+    const phone = document.getElementById('reg-phone').value;
+    const idImage = document.getElementById('reg-idimage').files[0];
+    const successDiv = document.getElementById('register-success');
+    const errorDiv = document.getElementById('register-error');
+
+    try {
+        // Check if user already exists in Auth
+        const methods = await auth.fetchSignInMethodsForEmail(email);
+        if (methods.length > 0) throw new Error('البريد الإلكتروني مستخدم بالفعل');
+
+        // Create Auth user
+        const userCred = await auth.createUserWithEmailAndPassword(email, password);
+        const uid = userCred.user.uid;
+
+        // Upload image if exists
+        let imageUrl = '';
+        if (idImage) {
+            const storageRef = storage.ref(`id_images/${uid}`);
+            await storageRef.put(idImage);
+            imageUrl = await storageRef.getDownloadURL();
+        }
+
+        // Save beneficiary data
+        const beneficiaryData = {
+            fullName, idNumber, idType, phone, status: 'pending',
+            basketContents: '', deliveryDate: '', notes: '', imageUrl, createdAt: new Date().toISOString()
+        };
+        await db.ref(`beneficiaries/${uid}`).set(beneficiaryData);
+
+        // Save user record
+        await db.ref(`users/${uid}`).set({
+            fullName, email, role: 'beneficiary', isActive: true, createdAt: new Date().toISOString()
+        });
+
+        // Create request
+        await db.ref(`requests/${uid}`).set({
+            beneficiaryId: uid, status: 'pending', createdAt: new Date().toISOString()
+        });
+
+        addLog('تسجيل مستفيد جديد', `الاسم: ${fullName}`);
+        successDiv.classList.remove('d-none');
+        document.getElementById('register-success-msg').innerHTML = `تم تسجيل طلبك بنجاح! سيتم مراجعته من قبل الإدارة.<br>يمكنك الآن <a href="#" onclick="showPage('login')">تسجيل الدخول</a> باستخدام بريدك الإلكتروني وكلمة المرور.`;
+        document.getElementById('registerForm').reset();
+        document.getElementById('reg-imagePreview').style.display = 'none';
+    } catch (err) {
+        errorDiv.classList.remove('d-none');
+        document.getElementById('register-error-msg').textContent = err.message;
+    }
+    return false;
+}
+
+// Admin Functions
+async function loadAdminDashboard() {
+    document.getElementById('admin-date').textContent = new Date().toLocaleDateString('ar-SA');
+    const usersSnap = await db.ref('users').once('value');
+    const beneficiariesSnap = await db.ref('beneficiaries').once('value');
+    const users = usersSnap.val() || {};
+    const beneficiaries = beneficiariesSnap.val() || {};
+    const totalUsers = Object.values(users).filter(u => u.role !== 'beneficiary').length;
+    const totalBeneficiaries = Object.keys(beneficiaries).length;
+    const pending = Object.values(beneficiaries).filter(b => b.status === 'pending').length;
+    const approved = Object.values(beneficiaries).filter(b => b.status === 'approved').length;
+    document.getElementById('admin-stat-users').textContent = totalUsers;
+    document.getElementById('admin-stat-beneficiaries').textContent = totalBeneficiaries;
+    document.getElementById('admin-stat-pending').textContent = pending;
+    document.getElementById('admin-stat-approved').textContent = approved;
+
+    // Recent requests
+    const requestsSnap = await db.ref('requests').once('value');
+    const requests = requestsSnap.val() || {};
+    let recent = Object.entries(requests).map(([id, req]) => ({ id, ...req })).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,10);
+    const tbody = document.getElementById('admin-recent-requests');
+    tbody.innerHTML = recent.map(r => {
+        const ben = beneficiaries[r.beneficiaryId] || {};
+        return `<tr><td>${r.id.substring(0,8)}</td><td>${ben.fullName || '-'}</td><td>${ben.idNumber || '-'}</td><td>${getStatusBadge(r.status)}</td><td>${new Date(r.createdAt).toLocaleDateString()}</td></tr>`;
+    }).join('');
+}
+
+async function loadUsersTable() {
+    const snap = await db.ref('users').once('value');
+    const users = snap.val() || {};
+    const tbody = document.getElementById('admin-users-table');
+    tbody.innerHTML = Object.entries(users).map(([uid, u]) => {
+        if (u.role === 'beneficiary') return '';
+        const roleBadge = u.role === 'admin' ? '<span class="badge bg-danger">مدير</span>' : '<span class="badge bg-info">موظف</span>';
+        const statusBadge = u.isActive ? '<span class="badge bg-success">نشط</span>' : '<span class="badge bg-secondary">معطل</span>';
+        return `<tr><td>${uid.substring(0,8)}</td><td>${u.fullName}</td><td>${u.email}</td><td>${roleBadge}</td><td>${statusBadge}</td><td><button class="btn btn-sm btn-warning" onclick="toggleUser('${uid}')"><i class="fas fa-power-off"></i></button> <button class="btn btn-sm btn-danger" onclick="deleteUser('${uid}')"><i class="fas fa-trash"></i></button></td></tr>`;
+    }).join('');
+}
+
+async function loadBeneficiariesTable() {
+    const snap = await db.ref('beneficiaries').once('value');
+    let beneficiaries = snap.val() || {};
+    let filtered = Object.entries(beneficiaries);
+    if (beneficiaryFilter !== 'all') filtered = filtered.filter(([_,b]) => b.status === beneficiaryFilter);
+    const tbody = document.getElementById('admin-beneficiaries-table');
+    tbody.innerHTML = filtered.map(([uid, b]) => {
+        return `<tr><td>${uid.substring(0,8)}</td><td>${b.fullName}</td><td>${b.idNumber}</td><td>${b.phone}</td><td>${getStatusBadge(b.status)}</td><td>${b.status === 'pending' ? `<button class="btn btn-sm btn-success" onclick="approveBeneficiary('${uid}')"><i class="fas fa-check"></i></button> <button class="btn btn-sm btn-danger" onclick="rejectBeneficiary('${uid}')"><i class="fas fa-times"></i></button>` : '<span class="text-muted">تمت المعالجة</span>'}</td></tr>`;
+    }).join('');
+}
+
+async function loadRequestsTable() {
+    const snap = await db.ref('requests').once('value');
+    const requests = snap.val() || {};
+    const tbody = document.getElementById('admin-requests-table');
+    tbody.innerHTML = Object.entries(requests).map(([uid, req]) => {
+        return `<tr><td>${uid.substring(0,8)}</td><td>${req.beneficiaryId.substring(0,8)}</td><td>-</td><td>${getStatusBadge(req.status)}</td><td>${new Date(req.createdAt).toLocaleDateString()}</td><td>${req.status === 'pending' ? `<button class="btn btn-sm btn-success" onclick="approveRequest('${uid}')"><i class="fas fa-check me-1"></i>قبول</button> <button class="btn btn-sm btn-danger" onclick="rejectRequest('${uid}')"><i class="fas fa-times me-1"></i>رفض</button>` : '<span class="text-muted">تمت المعالجة</span>'}</td></tr>`;
+    }).join('');
+}
+
+async function loadReports() {
+    const beneficiariesSnap = await db.ref('beneficiaries').once('value');
+    const requestsSnap = await db.ref('requests').once('value');
+    const beneficiaries = beneficiariesSnap.val() || {};
+    const requests = requestsSnap.val() || {};
+    const pendingB = Object.values(beneficiaries).filter(b => b.status === 'pending').length;
+    const approvedB = Object.values(beneficiaries).filter(b => b.status === 'approved').length;
+    const rejectedB = Object.values(beneficiaries).filter(b => b.status === 'rejected').length;
+    const pendingR = Object.values(requests).filter(r => r.status === 'pending').length;
+    const approvedR = Object.values(requests).filter(r => r.status === 'approved').length;
+    const rejectedR = Object.values(requests).filter(r => r.status === 'rejected').length;
+    new Chart(document.getElementById('chartBeneficiaries'), {
+        type: 'doughnut',
+        data: { labels: ['قيد المراجعة','معتمد','مرفوض'], datasets: [{ data: [pendingB, approvedB, rejectedB], backgroundColor: ['#ffc107','#28a745','#dc3545'] }] },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+    new Chart(document.getElementById('chartRequests'), {
+        type: 'pie',
+        data: { labels: ['قيد المراجعة','مقبول','مرفوض'], datasets: [{ data: [pendingR, approvedR, rejectedR], backgroundColor: ['#ffc107','#28a745','#dc3545'] }] },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+    const logsSnap = await db.ref('logs').once('value');
+    const logs = logsSnap.val() || {};
+    const logsTbody = document.getElementById('admin-logs-table');
+    logsTbody.innerHTML = Object.entries(logs).sort((a,b)=>new Date(b[1].createdAt)-new Date(a[1].createdAt)).slice(0,50).map(([id, l]) => {
+        return `<tr><td>${id.substring(0,8)}</td><td>${l.action}</td><td>${l.details}</td><td>${new Date(l.createdAt).toLocaleString()}</td></tr>`;
+    }).join('');
+}
+
+// Beneficiary management actions
+async function approveBeneficiary(uid) {
+    await db.ref(`beneficiaries/${uid}/status`).set('approved');
+    await db.ref(`requests/${uid}/status`).set('approved');
+    addLog('قبول مستفيد', `ID: ${uid}`);
+    loadBeneficiariesTable();
+    loadAdminDashboard();
+}
+async function rejectBeneficiary(uid) {
+    await db.ref(`beneficiaries/${uid}/status`).set('rejected');
+    await db.ref(`requests/${uid}/status`).set('rejected');
+    addLog('رفض مستفيد', `ID: ${uid}`);
+    loadBeneficiariesTable();
+    loadAdminDashboard();
+}
+async function approveRequest(uid) {
+    await db.ref(`requests/${uid}/status`).set('approved');
+    await db.ref(`beneficiaries/${uid}/status`).set('approved');
+    addLog('قبول طلب', `ID: ${uid}`);
+    loadRequestsTable();
+    loadAdminDashboard();
+}
+async function rejectRequest(uid) {
+    await db.ref(`requests/${uid}/status`).set('rejected');
+    await db.ref(`beneficiaries/${uid}/status`).set('rejected');
+    addLog('رفض طلب', `ID: ${uid}`);
+    loadRequestsTable();
+    loadAdminDashboard();
+}
+
+// User management
+async function toggleUser(uid) {
+    const snap = await db.ref(`users/${uid}/isActive`).once('value');
+    const current = snap.val();
+    await db.ref(`users/${uid}/isActive`).set(!current);
+    addLog('تغيير حالة المستخدم', `ID: ${uid}`);
+    loadUsersTable();
+}
+async function deleteUser(uid) {
+    if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+        // Optionally disable account in Auth (we'll just remove from DB and disable Auth)
+        try {
+            await db.ref(`users/${uid}`).remove();
+            addLog('حذف مستخدم', `ID: ${uid}`);
+            loadUsersTable();
+        } catch(e) { alert(e.message); }
+    }
+}
+async function addUser() {
+    const fullName = document.getElementById('new-user-fullname').value;
+    const email = document.getElementById('new-user-email').value;
+    const password = document.getElementById('new-user-password').value;
+    const role = document.getElementById('new-user-role').value;
+    if (!fullName || !email || !password) { alert('جميع الحقول مطلوبة'); return; }
+    try {
+        const userCred = await auth.createUserWithEmailAndPassword(email, password);
+        const uid = userCred.user.uid;
+        await db.ref(`users/${uid}`).set({
+            fullName, email, role, isActive: true, createdAt: new Date().toISOString()
+        });
+        addLog('إضافة مستخدم', `المستخدم: ${email}`);
+        bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+        loadUsersTable();
+        loadAdminDashboard();
+    } catch(err) { alert(err.message); }
+}
+function showAddUserModal() { new bootstrap.Modal(document.getElementById('addUserModal')).show(); }
+
+function filterBeneficiaries(status) { beneficiaryFilter = status; loadBeneficiariesTable(); }
+
+// Employee Functions
+async function loadEmployeeDashboard() {
+    document.getElementById('emp-date').textContent = new Date().toLocaleDateString('ar-SA');
+    const beneficiariesSnap = await db.ref('beneficiaries').once('value');
+    const beneficiaries = beneficiariesSnap.val() || {};
+    const total = Object.keys(beneficiaries).length;
+    const pending = Object.values(beneficiaries).filter(b => b.status === 'pending').length;
+    const approved = Object.values(beneficiaries).filter(b => b.status === 'approved').length;
+    document.getElementById('emp-stat-beneficiaries').textContent = total;
+    document.getElementById('emp-stat-pending').textContent = pending;
+    document.getElementById('emp-stat-approved').textContent = approved;
+}
+async function loadEmpRequestsTable() {
+    const snap = await db.ref('requests').once('value');
+    const requests = snap.val() || {};
+    const tbody = document.getElementById('emp-requests-table');
+    tbody.innerHTML = Object.entries(requests).map(([uid, req]) => {
+        return `<tr><td>${uid.substring(0,8)}</td><td>${req.beneficiaryId.substring(0,8)}</td><td>-</td><td>${getStatusBadge(req.status)}</td><td>${new Date(req.createdAt).toLocaleDateString()}</td></tr>`;
+    }).join('');
+}
+function handleExcelUpload(input) {
+    if (input.files && input.files[0]) {
+        document.getElementById('excel-filename').textContent = input.files[0].name;
+        document.getElementById('excel-info').classList.remove('d-none');
+        addLog('رفع ملف Excel', `الملف: ${input.files[0].name}`);
+        alert(`تم استلام ملف: ${input.files[0].name}\n(سيتم معالجة البيانات وإضافتها إلى قاعدة البيانات قريباً)`);
+    }
+}
+async function performSearch() {
+    const query = document.getElementById('search-query').value.toLowerCase();
+    const snap = await db.ref('beneficiaries').once('value');
+    const beneficiaries = snap.val() || {};
+    const results = Object.entries(beneficiaries).filter(([_,b]) => b.fullName.includes(query) || b.idNumber.includes(query) || b.phone.includes(query));
+    const container = document.getElementById('search-results');
+    if (results.length === 0) {
+        container.innerHTML = '<div class="text-center py-5"><i class="fas fa-search fa-4x text-muted mb-3"></i><h4 class="text-muted">لم يتم العثور على نتائج</h4></div>';
+    } else {
+        container.innerHTML = `<div class="card shadow-sm"><div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0"><thead class="table-light"><tr><th>#</th><th>الاسم</th><th>رقم الهوية</th><th>الجوال</th><th>الحالة</th></tr></thead><tbody>${results.map(([uid,b])=>`<tr><td>${uid.substring(0,8)}</td><td>${b.fullName}</td><td>${b.idNumber}</td><td>${b.phone}</td><td>${getStatusBadge(b.status)}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+    }
+}
+function quickSearch() {
+    const query = document.getElementById('emp-quick-search').value;
+    document.getElementById('search-query').value = query;
+    showEmployeeTab('emp-search');
+    performSearch();
+}
+
+// Beneficiary Dashboard
+async function loadBeneficiaryDashboard() {
+    if (!currentUser) return;
+    document.getElementById('ben-date').textContent = new Date().toLocaleDateString('ar-SA');
+    const uid = currentUser.uid;
+    const benSnap = await db.ref(`beneficiaries/${uid}`).once('value');
+    const ben = benSnap.val();
+    if (ben) {
+        document.getElementById('ben-name').textContent = ben.fullName;
+        document.getElementById('ben-idnumber').textContent = ben.idNumber;
+        document.getElementById('ben-idtype').textContent = ben.idType === 'national_id' ? 'بطاقة الهوية الوطنية' : 'جواز السفر';
+        document.getElementById('ben-phone').textContent = ben.phone;
+        document.getElementById('ben-basket').textContent = ben.basketContents || 'لم يتم تحديد محتويات السلة بعد';
+        document.getElementById('ben-delivery').textContent = ben.deliveryDate || 'لم يتم تحديد موعد الاستلام';
+        document.getElementById('ben-notes').textContent = ben.notes || 'لا توجد ملاحظات';
+        const badge = document.getElementById('ben-status-badge');
+        const text = document.getElementById('ben-status-text');
+        if (ben.status === 'pending') {
+            badge.className = 'status-badge status-pending mb-3';
+            badge.innerHTML = '<i class="fas fa-clock me-2"></i>قيد المراجعة';
+            text.textContent = 'طلبك قيد المراجعة من قبل الإدارة. سيتم إشعارك فور قبول الطلب.';
+        } else if (ben.status === 'approved') {
+            badge.className = 'status-badge status-approved mb-3';
+            badge.innerHTML = '<i class="fas fa-check-circle me-2"></i>معتمد';
+            text.textContent = 'تم قبول طلبك بنجاح. يمكنك مراجعة بيانات الاستلام أعلاه.';
+        } else {
+            badge.className = 'status-badge status-rejected mb-3';
+            badge.innerHTML = '<i class="fas fa-times-circle me-2"></i>مرفوض';
+            text.textContent = 'نعتذر، لم يتم قبول طلبك. يرجى التواصل مع الإدارة للاستفسار.';
+        }
+        if (ben.imageUrl) {
+            document.getElementById('ben-idimage-container').innerHTML = `<img src="${ben.imageUrl}" class="img-thumbnail" style="max-width:100%;">`;
+        }
+    }
+}
+
+// Common helpers
+function getStatusBadge(status) {
+    if (status === 'pending') return '<span class="badge bg-warning">قيد المراجعة</span>';
+    if (status === 'approved') return '<span class="badge bg-success">معتمد</span>';
+    return '<span class="badge bg-danger">مرفوض</span>';
+}
+async function addLog(action, details) {
+    const logId = Date.now() + '_' + Math.random().toString(36);
+    await db.ref(`logs/${logId}`).set({
+        action, details, createdAt: new Date().toISOString(), userId: currentUser ? currentUser.uid : null
+    });
+}
+
+// Initial load for homepage stats
+async function loadHomeStats() {
+    const beneficiariesSnap = await db.ref('beneficiaries').once('value');
+    const beneficiaries = beneficiariesSnap.val() || {};
+    const approved = Object.values(beneficiaries).filter(b => b.status === 'approved').length;
+    const pending = Object.values(beneficiaries).filter(b => b.status === 'pending').length;
+    const deliveries = Object.values(beneficiaries).filter(b => b.deliveryDate).length;
+    document.getElementById('stat-beneficiaries').textContent = approved;
+    document.getElementById('stat-pending').textContent = pending;
+    document.getElementById('stat-deliveries').textContent = deliveries;
+}
+
+// Auth state observer
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        const snap = await db.ref(`users/${user.uid}`).once('value');
+        const userData = snap.val();
+        if (userData && userData.isActive) {
+            currentUser = user;
+            currentUserRole = userData.role;
+            if (userData.role === 'admin') showPage('admin');
+            else if (userData.role === 'employee') showPage('employee');
+            else showPage('beneficiary');
+        } else {
+            await auth.signOut();
+        }
+    } else {
+        currentUser = null;
+        currentUserRole = null;
+        showPage('home');
+        loadHomeStats();
+    }
+});
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    loadHomeStats();
+});
+</script>
+</body>
+</html>
